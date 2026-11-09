@@ -15,6 +15,16 @@ def test_dashboard_and_session(tmp_path, monkeypatch):
     conn = sqlite3.connect(tmp_path / "study.db")
     assert conn.execute("select count(*) from sessions").fetchone()[0] == 1
 
+def test_previous_day_session_does_not_disable_today_start(tmp_path, monkeypatch):
+    monkeypatch.setattr(db, "DB_PATH", tmp_path / "study.db")
+    db.init_db()
+    with db.connection() as conn:
+        conn.execute("INSERT INTO sessions(study_date,scheduled_start_at,attendance_status) VALUES(?,?,?)", ("2026-11-08", "2026-11-08T19:00:00+09:00", "CHECKED_IN"))
+    with TestClient(app, follow_redirects=False) as client:
+        response = client.get("/")
+        assert response.status_code == 200
+        assert "disabled" not in response.text
+
 def test_upload_rejects_unsupported(tmp_path, monkeypatch):
     monkeypatch.setattr(db, "DB_PATH", tmp_path / "study.db")
     with TestClient(app, follow_redirects=False) as client:

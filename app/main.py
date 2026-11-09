@@ -22,13 +22,14 @@ def startup() -> None:
     (Path(__file__).parent.parent / "data" / "inbox").mkdir(parents=True, exist_ok=True)
 
 def dashboard_context(request: Request):
+    today = date.today().isoformat()
     with connection() as conn:
         assignments = [dict(r) for r in conn.execute("SELECT * FROM assignments ORDER BY deadline_at").fetchall()]
-        sessions = [dict(r) for r in conn.execute("SELECT * FROM sessions ORDER BY id DESC LIMIT 1").fetchall()]
+        sessions = [dict(r) for r in conn.execute("SELECT * FROM sessions WHERE study_date=? ORDER BY id DESC LIMIT 1", (today,)).fetchall()]
         submissions = [dict(r) for r in conn.execute("SELECT * FROM submissions ORDER BY received_at DESC").fetchall()]
         topics = [dict(r) for r in conn.execute("SELECT * FROM topics ORDER BY subject, kind DESC, id").fetchall()]
         proofs = [dict(r) for r in conn.execute("SELECT * FROM proofs ORDER BY submitted_at DESC").fetchall()]
-    return {"request": request, "today": date.today().isoformat(), "assignments": assignments, "session": sessions[0] if sessions else None, "submissions": submissions, "topics": topics, "proofs": proofs}
+    return {"request": request, "today": today, "assignments": assignments, "session": sessions[0] if sessions else None, "submissions": submissions, "topics": topics, "proofs": proofs}
 
 @app.get("/", response_class=HTMLResponse)
 def dashboard(request: Request):
