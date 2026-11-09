@@ -32,6 +32,8 @@ def init_db() -> None:
         CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY AUTOINCREMENT, event_type TEXT NOT NULL, target_id TEXT, event_at TEXT NOT NULL, payload_json TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS topics (id TEXT PRIMARY KEY, assignment_id TEXT NOT NULL, subject TEXT NOT NULL, kind TEXT NOT NULL, title TEXT NOT NULL, statement TEXT NOT NULL, source_reference TEXT, prerequisites TEXT NOT NULL DEFAULT '[]', learning_state TEXT NOT NULL DEFAULT 'NOT_STARTED');
         CREATE TABLE IF NOT EXISTS proofs (id INTEGER PRIMARY KEY AUTOINCREMENT, topic_id TEXT NOT NULL, proof_text TEXT, image_path TEXT, submitted_at TEXT NOT NULL, verification_status TEXT NOT NULL DEFAULT 'PENDING_REVIEW', feedback TEXT, FOREIGN KEY(topic_id) REFERENCES topics(id));
+        CREATE TABLE IF NOT EXISTS problems (id TEXT PRIMARY KEY, topic_id TEXT NOT NULL, prompt TEXT NOT NULL, max_score INTEGER NOT NULL, FOREIGN KEY(topic_id) REFERENCES topics(id));
+        CREATE TABLE IF NOT EXISTS proof_pages (id INTEGER PRIMARY KEY AUTOINCREMENT, proof_id INTEGER NOT NULL, page_number INTEGER NOT NULL, image_path TEXT NOT NULL, FOREIGN KEY(proof_id) REFERENCES proofs(id));
         """)
         if conn.execute("SELECT COUNT(*) FROM assignments").fetchone()[0] == 0:
             rows = [("A-20261109-01", "2026-11-09", "Real Analysis", "Sets and Functions", "2026-11-09T21:40:00+09:00"), ("L-20261109-01", "2026-11-09", "Linear Algebra", "Vector Spaces", "2026-11-10T00:30:00+09:00")]
@@ -46,6 +48,12 @@ def init_db() -> None:
             conn.executemany("INSERT INTO topics VALUES (?,?,?,?,?,?,?,?,?)", topics)
         conn.execute("UPDATE topics SET statement=? WHERE id=?", (r"For sets $A$ and $B$, $(A \\cup B)^c = A^c \\cap B^c$ and $(A \\cap B)^c = A^c \\cup B^c$.", "A-20261109-T02"))
         conn.execute("UPDATE topics SET statement=? WHERE id=?", (r"A nonempty subset $W$ of $V$ is a subspace if it is closed under addition and scalar multiplication.", "L-20261109-T02"))
+        if conn.execute("SELECT COUNT(*) FROM problems").fetchone()[0] == 0:
+            problems = [
+                ("A-20261109-P01", "A-20261109-T02", r"Prove $(A \\cup B)^c = A^c \\cap B^c$ using element-wise reasoning.", 10),
+                ("L-20261109-P01", "L-20261109-T02", r"Prove that the intersection of two subspaces of $V$ is a subspace.", 10),
+            ]
+            conn.executemany("INSERT INTO problems VALUES (?,?,?,?)", problems)
 
 def event(event_type: str, target_id: str | None, payload: dict) -> None:
     with connection() as conn:

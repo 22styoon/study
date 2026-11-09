@@ -39,6 +39,12 @@ def dashboard_context(request: Request):
     return {"request": request, "today": today, "assignments": assignments, "session": sessions[0] if sessions else None, "submissions": submissions, "topics": topics, "focus_topic": focus_topic, "next_topic": next_topic, "proofs": proofs}
 
 @app.get("/", response_class=HTMLResponse)
+def home():
+    with connection() as conn:
+        topic = conn.execute("SELECT id FROM topics ORDER BY subject, kind DESC, id LIMIT 1").fetchone()
+    return RedirectResponse(f"/topic/{topic['id']}") if topic else HTMLResponse("등록된 명제가 없습니다.")
+
+@app.get("/dashboard", response_class=HTMLResponse)
 def dashboard(request: Request):
     return templates.TemplateResponse(request=request, name="dashboard.html", context=dashboard_context(request))
 
@@ -64,10 +70,38 @@ async def upload_submission(assignment_id: str = Form(...), file: UploadFile = F
         return RedirectResponse("/?error=invalid", status_code=303)
     return RedirectResponse("/", status_code=303)
 
+@app.get("/topic/{topic_id}", response_class=HTMLResponse)
+def topic_page(request: Request, topic_id: str):
+    with connection() as conn:
+        topic = conn.execute("SELECT * FROM topics WHERE id=?", (topic_id,)).fetchone()
+        topics = [dict(row) for row in conn.execute("SELECT id FROM topics ORDER BY subject, kind DESC, id").fetchall()]
+    if topic is None:
+        raise HTTPException(status_code=404, detail="명제를 찾을 수 없습니다.")
+    index = [row["id"] for row in topics].index(topic_id)
+    next_topic = topics[index + 1]["id"] if index + 1 < len(topics) else None
+    return templates.TemplateResponse(request=request, name="topic.html", context={"request": request, "topic": dict(topic), "next_topic": next_topic})
+
+@app.get("/problem/{topic_id}", response_class=HTMLResponse)
+def problem_page(request: Request, topic_id: str):
+    with connection() as conn:
+        topic = conn.execute("SELECT * FROM topics WHERE id=?", (topic_id,)).fetchone()
+        problem = conn.execute("SELECT * FROM problems WHERE topic_id=? ORDER BY id LIMIT 1", (topic_id,)).fetchone()
+    if topic is None or problem is None:
+        raise HTTPException(status_code=404, detail="문제를 찾을 수 없습니다.")
+    return templates.TemplateResponse(request=request, name="problem.html", context={"request": request, "topic": dict(topic), "problem": dict(problem)})
+
+@app.get("/proof/{topic_id}", response_class=HTMLResponse)
+def proof_page(request: Request, topic_id: str):
+    with connection() as conn:
+        topic = conn.execute("SELECT * FROM topics WHERE id=?", (topic_id,)).fetchone()
+    if topic is None:
+        raise HTTPException(status_code=404, detail="명제를 찾을 수 없습니다.")
+    return templates.TemplateResponse(request=request, name="proof.html", context={"request": request, "topic": dict(topic)})
+
 @app.post("/proofs")
-def upload_proof(topic_id: str = Form(...), proof_text: str = Form(""), proof_image_data: str = Form("")):
+def upload_proof(topic_id: str = Form(...), proof_pages_data: str = Form("")):
     try:
-        submit_proof(topic_id, proof_text, proof_image_data or None)
+        submit_proof(topic_id, proof_pages_data=proof_pages_data or None)
     except ValueError:
         return RedirectResponse("/?proof_error=invalid", status_code=303)
     return RedirectResponse("/?proof_submitted=1", status_code=303)
