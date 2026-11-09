@@ -2,7 +2,7 @@ from __future__ import annotations
 from datetime import date
 from pathlib import Path
 from fastapi import Body, FastAPI, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from app.db import connection, init_db
@@ -33,6 +33,10 @@ def dashboard_context(request: Request):
 @app.get("/", response_class=HTMLResponse)
 def dashboard(request: Request):
     return templates.TemplateResponse(request=request, name="dashboard.html", context=dashboard_context(request))
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    return Response(status_code=204)
 
 @app.post("/sessions/start")
 def begin_session(study_date: str = Form(...)):

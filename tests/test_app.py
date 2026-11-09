@@ -9,6 +9,7 @@ def test_dashboard_and_session(tmp_path, monkeypatch):
         response = client.get("/")
         assert response.status_code == 200
         assert "학습 시작" in response.text
+        assert client.get("/favicon.ico").status_code == 204
         response = client.post("/sessions/start", data={"study_date": "2026-11-09"})
         assert response.status_code == 303
     conn = sqlite3.connect(tmp_path / "study.db")
