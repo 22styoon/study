@@ -40,4 +40,8 @@ def test_separate_topic_problem_and_proof_pages(tmp_path, monkeypatch):
         assert client.get("/").status_code == 200
         assert client.get("/topic/A-20261109-T02").status_code == 200
         assert client.get("/problem/A-20261109-T02").status_code == 200
-        assert client.get("/proof/A-20261109-T02").status_code == 200
+        proof_response = client.get("/proof/A-20261109-T02")
+        assert proof_response.status_code == 200
+        assert "eraser-size" in proof_response.text
+        assert "id=\"zoom\"" in proof_response.text
+        assert "For sets" in proof_response.text
