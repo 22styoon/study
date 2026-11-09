@@ -44,6 +44,8 @@ def init_db() -> None:
                 ("L-20261109-T02", "L-20261109-01", "Linear Algebra", "theorem", "Subspace Criterion", "A nonempty subset W of V is a subspace if it is closed under addition and scalar multiplication.", "Friedberg §1.3", '["Vector Space"]', "NOT_STARTED"),
             ]
             conn.executemany("INSERT INTO topics VALUES (?,?,?,?,?,?,?,?,?)", topics)
+        conn.execute("UPDATE topics SET statement=? WHERE id=?", (r"For sets $A$ and $B$, $(A \\cup B)^c = A^c \\cap B^c$ and $(A \\cap B)^c = A^c \\cup B^c$.", "A-20261109-T02"))
+        conn.execute("UPDATE topics SET statement=? WHERE id=?", (r"A nonempty subset $W$ of $V$ is a subspace if it is closed under addition and scalar multiplication.", "L-20261109-T02"))
 
 def event(event_type: str, target_id: str | None, payload: dict) -> None:
     with connection() as conn:
