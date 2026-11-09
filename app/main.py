@@ -29,7 +29,14 @@ def dashboard_context(request: Request):
         submissions = [dict(r) for r in conn.execute("SELECT * FROM submissions ORDER BY received_at DESC").fetchall()]
         topics = [dict(r) for r in conn.execute("SELECT * FROM topics ORDER BY subject, kind DESC, id").fetchall()]
         proofs = [dict(r) for r in conn.execute("SELECT * FROM proofs ORDER BY submitted_at DESC").fetchall()]
-    return {"request": request, "today": today, "assignments": assignments, "session": sessions[0] if sessions else None, "submissions": submissions, "topics": topics, "proofs": proofs}
+    requested_topic = request.query_params.get("topic")
+    topic_ids_with_proofs = {proof["topic_id"] for proof in proofs}
+    topic_index = next((index for index, topic in enumerate(topics) if topic["id"] == requested_topic), None)
+    if topic_index is None:
+        topic_index = next((index for index, topic in enumerate(topics) if topic["id"] not in topic_ids_with_proofs), 0) if topics else None
+    focus_topic = topics[topic_index] if topic_index is not None else None
+    next_topic = topics[topic_index + 1] if topic_index is not None and topic_index + 1 < len(topics) else None
+    return {"request": request, "today": today, "assignments": assignments, "session": sessions[0] if sessions else None, "submissions": submissions, "topics": topics, "focus_topic": focus_topic, "next_topic": next_topic, "proofs": proofs}
 
 @app.get("/", response_class=HTMLResponse)
 def dashboard(request: Request):
