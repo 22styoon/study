@@ -3,9 +3,17 @@ param(
     [int]$Port = 8765
 )
 
-$python = Join-Path $PSScriptRoot "..\.venv\Scripts\python.exe"
+$projectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+$python = Join-Path $projectRoot ".venv\Scripts\python.exe"
 if (-not (Test-Path -LiteralPath $python)) {
-    throw "프로젝트 .venv를 찾을 수 없습니다: $python"
+    throw "Project .venv was not found: $python"
 }
 
-& $python -m uvicorn app.main:app --host $HostAddress --port $Port
+Push-Location $projectRoot
+try {
+    & $python -m uvicorn app.main:app --host $HostAddress --port $Port
+    exit $LASTEXITCODE
+}
+finally {
+    Pop-Location
+}
