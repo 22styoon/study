@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["subject", "study_date", "textbook", "section", "prerequisites", "definitions", "theorems", "examples", "problems", "estimated_minutes", "submission_deadline", "solution_visibility"],
+  "properties": {
+    "subject": {"enum": ["Real Analysis", "Linear Algebra"]},
+    "study_date": {"type": "string", "format": "date"},
+    "textbook": {"type": "string", "minLength": 1},
+    "section": {"type": "string", "minLength": 1},
+    "prerequisites": {"type": "array", "items": {"type": "string"}},
+    "definitions": {"type": "array", "items": {"type": "object", "required": ["term", "statement"], "properties": {"term": {"type": "string"}, "statement": {"type": "string"}, "source_reference": {"type": "string"}}, "additionalProperties": false}},
+    "theorems": {"type": "array", "items": {"type": "object", "required": ["name", "statement"], "properties": {"name": {"type": "string"}, "statement": {"type": "string"}, "source_reference": {"type": "string"}}, "additionalProperties": false}},
+    "examples": {"type": "array", "items": {"type": "string"}},
+    "problems": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["problem_id", "prompt", "max_score", "solution_visibility"], "properties": {"problem_id": {"type": "string", "pattern": "^[AL]-[0-9]{8}-[0-9]{2}$"}, "prompt": {"type": "string"}, "max_score": {"type": "number", "exclusiveMinimum": 0}, "source_reference": {"type": "string"}, "solution_visibility": {"enum": ["hidden", "after_submission", "always"]}}, "additionalProperties": false}},
+    "estimated_minutes": {"type": "integer", "minimum": 1, "maximum": 600},
+    "submission_deadline": {"type": "string", "format": "date-time"},
+    "solution_visibility": {"enum": ["hidden", "after_submission", "always"]}
+  },
+  "additionalProperties": false
+}

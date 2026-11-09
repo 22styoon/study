@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.env
+data/textbooks/*
+data/submissions/*
+data/inbox/*
+data/proofs/*
+data/assignments/*
+data/study.db*
+data/backups/*
+data/logs/*
+!data/**/.gitkeep

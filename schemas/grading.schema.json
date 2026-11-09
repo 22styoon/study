@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["submission_id", "grading_status", "requires_transcription_review", "problems"],
+  "properties": {
+    "submission_id": {"type": "string", "minLength": 1},
+    "grading_status": {"enum": ["pending", "graded", "needs_revision", "needs_transcription_review", "failed"]},
+    "requires_transcription_review": {"type": "boolean"},
+    "problems": {"type": "array", "items": {"type": "object", "required": ["problem_id", "score", "max_score", "independent_solution", "logical_gaps", "revision_required"], "properties": {"problem_id": {"type": "string"}, "score": {"type": "number", "minimum": 0}, "max_score": {"type": "number", "exclusiveMinimum": 0}, "independent_solution": {"type": "boolean"}, "logical_gaps": {"type": "array", "items": {"type": "string"}}, "revision_required": {"type": "boolean"}}, "additionalProperties": false}}
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,5 @@
+timezone: Asia/Seoul
+port: 8765
+data_dir: data
+inbox_dir: data/inbox
+submission_dir: data/submissions
